@@ -21,6 +21,30 @@ async function runWithConcurrency(limit, items, taskFn) {
   return Promise.all(results);
 }
 
+// Helper to fetch historical price data with exponential backoff retries for rate-limiting protection
+async function fetchWithRetry(symbol, queryOptions, retries = 3, delay = 1500) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await yahooFinance.historical(symbol, queryOptions, {
+        fetchOptions: {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+          }
+        }
+      });
+    } catch (err) {
+      const isRateLimit = err.message && (err.message.includes('429') || err.message.includes('Too Many Requests') || err.message.includes('502') || err.message.includes('503'));
+      if (isRateLimit && i < retries - 1) {
+        // Wait with exponential backoff + jitter
+        const backoffDelay = delay * Math.pow(2, i) + Math.random() * 500;
+        await new Promise(resolve => setTimeout(resolve, backoffDelay));
+        continue;
+      }
+      throw err;
+    }
+  }
+}
+
 async function runBacktest(lookbackMonths = 12) {
   const stocksPath = path.join(__dirname, 'stocks.json');
   const backtestResultsPath = path.join(__dirname, '../backtest_results.json');
@@ -57,15 +81,9 @@ async function runBacktest(lookbackMonths = 12) {
     const yahooSymbol = `${symbol}.NS`;
 
     try {
-      const dailyData = await yahooFinance.historical(yahooSymbol, {
+      const dailyData = await fetchWithRetry(yahooSymbol, {
         period1: downloadStartDate,
         interval: '1d'
-      }, {
-        fetchOptions: {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-          }
-        }
       });
 
       if (!dailyData || dailyData.length === 0) return;

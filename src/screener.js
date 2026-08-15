@@ -129,6 +129,31 @@ async function runWithConcurrency(limit, items, taskFn) {
   return Promise.all(results);
 }
 
+// Helper to fetch historical price data with exponential backoff retries for rate-limiting protection
+async function fetchWithRetry(symbol, queryOptions, retries = 3, delay = 1500) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await yahooFinance.historical(symbol, queryOptions, {
+        fetchOptions: {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+          }
+        }
+      });
+    } catch (err) {
+      const isRateLimit = err.message && (err.message.includes('429') || err.message.includes('Too Many Requests') || err.message.includes('502') || err.message.includes('503'));
+      if (isRateLimit && i < retries - 1) {
+        // Wait with exponential backoff + jitter
+        const backoffDelay = delay * Math.pow(2, i) + Math.random() * 500;
+        console.warn(`[RateLimit/Network Error] Retrying ${symbol} in ${Math.round(backoffDelay)}ms (Attempt ${i + 1}/${retries})...`);
+        await new Promise(resolve => setTimeout(resolve, backoffDelay));
+        continue;
+      }
+      throw err;
+    }
+  }
+}
+
 // Main scan function
 async function runScan(progressCallback = () => {}) {
   const stocksPath = path.join(__dirname, 'stocks.json');
@@ -166,13 +191,7 @@ async function runScan(progressCallback = () => {}) {
         interval: '1d'
       };
 
-      const dailyData = await yahooFinance.historical(yahooSymbol, queryOptions, {
-        fetchOptions: {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-          }
-        }
-      });
+      const dailyData = await fetchWithRetry(yahooSymbol, queryOptions);
 
       // Filter out invalid bars first
       if (!dailyData || dailyData.length === 0) {
