@@ -1,0 +1,20 @@
+{
+  "name": "stock-screener",
+  "version": "1.0.0",
+  "description": "Technical Stock Screener with Web Dashboard and Telegram alerts",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "node-cron": "^3.0.3",
+    "yahoo-finance2": "^2.11.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

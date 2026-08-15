@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Antigravity Technical Stock Screener</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="glass-bg"></div>
+
+  <div class="container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-logo-section">
+        <div class="glow-logo">
+          <i data-lucide="trending-up" class="logo-icon"></i>
+        </div>
+        <div class="header-titles">
+          <h1>Antigravity Stock Screener</h1>
+          <p class="subtitle">NSE Cash Segment Technical Scanner</p>
+        </div>
+      </div>
+      
+      <div class="header-status-section">
+        <div class="status-card">
+          <span class="status-dot green pulse"></span>
+          <div class="status-details">
+            <span class="status-label">Server Status</span>
+            <span class="status-value">Active</span>
+          </div>
+        </div>
+        <div class="status-card">
+          <i data-lucide="clock" class="status-icon"></i>
+          <div class="status-details">
+            <span class="status-label">IST Time</span>
+            <span id="ist-time" class="status-value">--:--:--</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Overview Grid -->
+    <section class="overview-grid">
+      <!-- Last Scan Info -->
+      <div class="overview-card">
+        <div class="card-icon-container blue">
+          <i data-lucide="search" class="card-icon"></i>
+        </div>
+        <div class="card-info">
+          <h3>Last Scan Results</h3>
+          <p id="last-scan-summary" class="metric-value">0 Stocks</p>
+          <span id="last-scan-time" class="metric-desc">Never Scanned</span>
+        </div>
+      </div>
+
+      <!-- Scheduler Status -->
+      <div class="overview-card">
+        <div class="card-icon-container green">
+          <i data-lucide="calendar" class="card-icon"></i>
+        </div>
+        <div class="card-info">
+          <h3>Daily Automation</h3>
+          <p id="sched-time-display" class="metric-value">6:00 PM IST</p>
+          <span id="sched-status-label" class="metric-desc">Status: --</span>
+        </div>
+      </div>
+
+      <!-- Stock Database Info -->
+      <div class="overview-card">
+        <div class="card-icon-container purple">
+          <i data-lucide="database" class="card-icon"></i>
+        </div>
+        <div class="card-info">
+          <h3>Active Stock List</h3>
+          <p id="total-stocks-count" class="metric-value">500 Stocks</p>
+          <span class="metric-desc">Nifty 500 Cash Segment</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Content Layout -->
+    <div class="main-layout">
+      
+      <!-- Left Column: Settings and Rules -->
+      <div class="sidebar-column">
+        
+        <!-- Chartink Rules Mock Card -->
+        <div class="glass-card rules-card">
+          <div class="card-header">
+            <div class="header-title-row">
+              <i data-lucide="filter" class="header-icon text-cyan"></i>
+              <h2>Chartink Scanner Rules</h2>
+            </div>
+            <span class="badge badge-cyan">NSE Cash</span>
+          </div>
+          
+          <div class="chartink-rule-container">
+            <div class="chartink-pass-line">
+              <span class="pass-text">Stock <strong>passes all</strong> of the below filters in <strong>cash</strong> segment:</span>
+              <div class="rule-icon-group">
+                <i data-lucide="message-square" class="rule-small-icon"></i>
+                <i data-lucide="copy" class="rule-small-icon"></i>
+                <i data-lucide="bug" class="rule-small-icon"></i>
+              </div>
+            </div>
+            
+            <div class="chartink-nested-rules">
+              <div class="chartink-nested-header">
+                <i data-lucide="chevron-down" class="rule-arrow-icon"></i>
+                <span class="pass-text-nested">Stock <strong>passes all</strong> of the below filters in <strong>cash</strong> segment:</span>
+                <div class="rule-action-icons">
+                  <i data-lucide="message-square" class="rule-small-icon"></i>
+                  <i data-lucide="copy" class="rule-small-icon"></i>
+                  <i data-lucide="folder" class="rule-small-icon"></i>
+                  <i data-lucide="toggle-left" class="rule-small-icon rule-toggle active"></i>
+                  <i data-lucide="bug" class="rule-small-icon"></i>
+                  <i data-lucide="x" class="rule-small-icon text-red"></i>
+                </div>
+              </div>
+              
+              <!-- Rule List -->
+              <ul class="rule-list">
+                
+                <!-- Rule 1: Monthly RSI > 60 -->
+                <li class="rule-item">
+                  <div class="rule-item-content">
+                    <span class="rule-keyword">Monthly</span> 
+                    <span class="rule-indicator">Rsi( 14 )</span> 
+                    <span class="rule-operator">Greater than</span> 
+                    <span class="rule-type">Number</span> 
+                    <span class="rule-value">60</span>
+                  </div>
+                  <div class="rule-item-actions">
+                    <i data-lucide="plus-minus" class="rule-small-icon"></i>
+                    <i data-lucide="message-square" class="rule-small-icon"></i>
+                    <i data-lucide="copy" class="rule-small-icon"></i>
+                    <i data-lucide="square" class="rule-small-icon"></i>
+                    <i data-lucide="toggle-left" class="rule-small-icon rule-toggle active"></i>
+                    <i data-lucide="bug" class="rule-small-icon"></i>
+                    <i data-lucide="x" class="rule-small-icon"></i>
+                  </div>
+                </li>
+                
+                <!-- Rule 2: Weekly RSI > 60 -->
+                <li class="rule-item">
+                  <div class="rule-item-content">
+                    <span class="rule-keyword">Weekly</span> 
+                    <span class="rule-indicator">Rsi( 14 )</span> 
+                    <span class="rule-operator">Greater than</span> 
+                    <span class="rule-type">Number</span> 
+                    <span class="rule-value">60</span>
+                  </div>
+                  <div class="rule-item-actions">
+                    <i data-lucide="plus-minus" class="rule-small-icon"></i>
+                    <i data-lucide="message-square" class="rule-small-icon"></i>
+                    <i data-lucide="copy" class="rule-small-icon"></i>
+                    <i data-lucide="square" class="rule-small-icon"></i>
+                    <i data-lucide="toggle-left" class="rule-small-icon rule-toggle active"></i>
+                    <i data-lucide="bug" class="rule-small-icon"></i>
+                    <i data-lucide="x" class="rule-small-icon"></i>
+                  </div>
+                </li>
+                
+                <!-- Rule 3: 2 days ago RSI > 40 [DISABLED] -->
+                <li class="rule-item disabled">
+                  <div class="rule-item-content">
+                    <span class="rule-keyword">2 days ago</span> 
+                    <span class="rule-indicator">Rsi( 14 )</span> 
+                    <span class="rule-operator">Greater than</span> 
+                    <span class="rule-type">Number</span> 
+                    <span class="rule-value">40</span>
+                  </div>
+                  <div class="rule-item-actions">
+                    <i data-lucide="plus-minus" class="rule-small-icon"></i>
+                    <i data-lucide="message-square" class="rule-small-icon"></i>
+                    <i data-lucide="copy" class="rule-small-icon"></i>
+                    <i data-lucide="square" class="rule-small-icon"></i>
+                    <i data-lucide="toggle-left" class="rule-small-icon rule-toggle"></i>
+                    <i data-lucide="bug" class="rule-small-icon"></i>
+                    <i data-lucide="x" class="rule-small-icon"></i>
+                  </div>
+                </li>
+                
+                <!-- Rule 4: 1 day ago RSI < 40 -->
+                <li class="rule-item">
+                  <div class="rule-item-content">
+                    <span class="rule-keyword">1 day ago</span> 
+                    <span class="rule-indicator">Rsi( 14 )</span> 
+                    <span class="rule-operator">Less than</span> 
+                    <span class="rule-type">Number</span> 
+                    <span class="rule-value">40</span>
+                  </div>
+                  <div class="rule-item-actions">
+                    <i data-lucide="plus-minus" class="rule-small-icon"></i>
+                    <i data-lucide="message-square" class="rule-small-icon"></i>
+                    <i data-lucide="copy" class="rule-small-icon"></i>
+                    <i data-lucide="square" class="rule-small-icon"></i>
+                    <i data-lucide="toggle-left" class="rule-small-icon rule-toggle active"></i>
+                    <i data-lucide="bug" class="rule-small-icon"></i>
+                    <i data-lucide="x" class="rule-small-icon"></i>
+                  </div>
+                </li>
+                
+                <!-- Rule 5: Daily RSI > 40 -->
+                <li class="rule-item">
+                  <div class="rule-item-content">
+                    <span class="rule-keyword">Daily</span> 
+                    <span class="rule-indicator">Rsi( 14 )</span> 
+                    <span class="rule-operator">Greater than</span> 
+                    <span class="rule-type">Number</span> 
+                    <span class="rule-value">40</span>
+                  </div>
+                  <div class="rule-item-actions">
+                    <i data-lucide="plus-minus" class="rule-small-icon"></i>
+                    <i data-lucide="message-square" class="rule-small-icon"></i>
+                    <i data-lucide="copy" class="rule-small-icon"></i>
+                    <i data-lucide="square" class="rule-small-icon"></i>
+                    <i data-lucide="toggle-left" class="rule-small-icon rule-toggle active"></i>
+                    <i data-lucide="bug" class="rule-small-icon"></i>
+                    <i data-lucide="x" class="rule-small-icon"></i>
+                  </div>
+                </li>
+                
+                <!-- Rule 6: Daily Close > 200 [DISABLED] -->
+                <li class="rule-item disabled">
+                  <div class="rule-item-content">
+                    <span class="rule-keyword">Daily Close</span> 
+                    <span class="rule-operator">Greater than</span> 
+                    <span class="rule-type">Number</span> 
+                    <span class="rule-value">200</span>
+                  </div>
+                  <div class="rule-item-actions">
+                    <i data-lucide="plus-minus" class="rule-small-icon"></i>
+                    <i data-lucide="message-square" class="rule-small-icon"></i>
+                    <i data-lucide="copy" class="rule-small-icon"></i>
+                    <i data-lucide="square" class="rule-small-icon"></i>
+                    <i data-lucide="toggle-left" class="rule-small-icon rule-toggle"></i>
+                    <i data-lucide="bug" class="rule-small-icon"></i>
+                    <i data-lucide="x" class="rule-small-icon"></i>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Telegram Settings Panel -->
+        <div class="glass-card settings-card">
+          <div class="card-header">
+            <div class="header-title-row">
+              <i data-lucide="send" class="header-icon text-blue"></i>
+              <h2>Telegram Bot Alerts</h2>
+            </div>
+          </div>
+          
+          <form id="telegram-settings-form" class="settings-form">
+            <div class="form-group">
+              <label for="telegram-token">Telegram Bot Token</label>
+              <div class="input-wrapper">
+                <input type="password" id="telegram-token" placeholder="Enter Bot Token" class="form-input">
+                <button type="button" id="toggle-token-visibility" class="input-icon-btn">
+                  <i data-lucide="eye" class="toggle-icon"></i>
+                </button>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="telegram-chatid">Telegram Chat ID / Channel</label>
+              <input type="text" id="telegram-chatid" placeholder="e.g. -100123456789 or User ID" class="form-input">
+            </div>
+
+            <div class="form-group-row">
+              <div class="toggle-group">
+                <span class="toggle-label">Scheduler Automation</span>
+                <label class="switch">
+                  <input type="checkbox" id="scheduler-enabled-toggle">
+                  <span class="slider round"></span>
+                </label>
+              </div>
+              <div class="time-group">
+                <label for="scheduler-time-input">Daily Scan Time</label>
+                <input type="time" id="scheduler-time-input" value="18:00" class="time-input">
+              </div>
+            </div>
+
+            <div class="divider-text">Quality & Safety Filters</div>
+
+            <div class="form-group-row-three" style="margin-bottom: 20px;">
+              <div class="toggle-group">
+                <label for="min-close-price" class="toggle-label">Min Price (₹)</label>
+                <input type="number" id="min-close-price" min="0" step="1" value="20" class="form-input">
+              </div>
+              <div class="toggle-group">
+                <label for="min-volume" class="toggle-label">Min Vol (Qty)</label>
+                <input type="number" id="min-volume" min="0" step="5000" value="50000" class="form-input">
+              </div>
+              <div class="toggle-group">
+                <label for="min-history-years" class="toggle-label">Min History (Y)</label>
+                <input type="number" id="min-history-years" min="0" step="0.5" value="3" class="form-input">
+              </div>
+            </div>
+
+            <div class="button-row">
+              <button type="button" id="test-telegram-btn" class="btn btn-secondary">
+                <i data-lucide="bell" class="btn-icon"></i> Send Test
+              </button>
+              <button type="submit" class="btn btn-primary">
+                <i data-lucide="save" class="btn-icon"></i> Save Settings
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Quick Database Actions -->
+        <div class="glass-card actions-card">
+          <div class="card-header">
+            <div class="header-title-row">
+              <i data-lucide="settings" class="header-icon text-purple"></i>
+              <h2>Database Operations</h2>
+            </div>
+          </div>
+          <div class="actions-body">
+            <p class="action-desc">Force update stock listings from the National Stock Exchange of India website database archives.</p>
+            <button id="update-nifty-btn" class="btn btn-purple btn-full">
+              <i data-lucide="refresh-cw" class="btn-icon"></i> Fetch Latest Nifty 500 Tickers
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Control Panel, Progress, Results Table, Logs -->
+      <div class="content-column">
+        
+        <!-- Control Scan Card -->
+        <div class="glass-card control-card">
+          <div class="control-grid">
+            <div class="control-left">
+              <h2>Run Stock Screener Scan</h2>
+              <p>Triggers a full technical scan on the Nifty 500. This handles data calculations for RSI across all intervals and pushes matches directly to Telegram.</p>
+            </div>
+            <div class="control-right">
+              <button id="trigger-scan-btn" class="btn btn-glow">
+                <i data-lucide="play" class="btn-icon"></i> Start Technical Scan
+              </button>
+            </div>
+          </div>
+
+          <!-- Live Scanning Progress -->
+          <div id="progress-container" class="progress-container hidden">
+            <div class="progress-details">
+              <div class="progress-info">
+                <span class="progress-title">Scanning Tickers...</span>
+                <span id="progress-current-symbol" class="progress-ticker">--</span>
+              </div>
+              <span id="progress-percentage" class="progress-ratio">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div id="progress-bar-fill" class="progress-bar-fill" style="width: 0%"></div>
+            </div>
+            <div class="progress-sub-details">
+              <span id="progress-counts">0 / 500 stocks processed</span>
+              <span id="progress-status-msg" class="progress-message">Initializing connections...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scan Results -->
+        <div class="glass-card results-card">
+          <div class="card-header">
+            <div class="header-title-row">
+              <i data-lucide="list-checks" class="header-icon text-green"></i>
+              <h2>Screened Stock Matches</h2>
+            </div>
+            <div class="header-actions">
+              <input type="text" id="search-results-input" placeholder="Search symbol or name..." class="table-search-input">
+              <span id="results-count-badge" class="badge badge-green">0 Matches</span>
+            </div>
+          </div>
+          
+          <div class="table-container">
+            <table id="results-table">
+              <thead>
+                <tr>
+                  <th class="sortable" data-sort="symbol">Symbol <i data-lucide="arrow-up-down" class="sort-icon"></i></th>
+                  <th class="sortable" data-sort="name">Company Name <i data-lucide="arrow-up-down" class="sort-icon"></i></th>
+                  <th class="sortable" data-sort="close">Close Price <i data-lucide="arrow-up-down" class="sort-icon"></i></th>
+                  <th class="sortable" data-sort="dailyRsi">Daily RSI <i data-lucide="arrow-up-down" class="sort-icon"></i></th>
+                  <th class="sortable" data-sort="prevDailyRsi">Yesterday RSI <i data-lucide="arrow-up-down" class="sort-icon"></i></th>
+                  <th class="sortable" data-sort="weeklyRsi">Weekly RSI <i data-lucide="arrow-up-down" class="sort-icon"></i></th>
+                  <th class="sortable" data-sort="monthlyRsi">Monthly RSI <i data-lucide="arrow-up-down" class="sort-icon"></i></th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="results-table-body">
+                <tr>
+                  <td colspan="8" class="empty-table-msg">
+                    <i data-lucide="line-chart" class="empty-icon"></i>
+                    <p>No scanned matches displayed. Trigger a scan or check the latest automation run.</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+        </div>
+
+        <!-- Backtest Control & Results -->
+        <div class="glass-card results-card">
+          <div class="card-header">
+            <div class="header-title-row">
+              <i data-lucide="history" class="header-icon text-purple"></i>
+              <h2>Historical Backtest Signals (12-Month Audit)</h2>
+            </div>
+            <div class="header-actions">
+              <button id="run-backtest-btn" class="btn btn-purple" style="padding: 6px 14px; font-size: 12px;">
+                <i data-lucide="play" class="btn-icon"></i> Run Backtest Audit
+              </button>
+            </div>
+          </div>
+          
+          <!-- Backtest Status Box -->
+          <div id="backtest-status-container" class="progress-container hidden" style="margin: 16px 24px;">
+            <div class="progress-details">
+              <span class="progress-title">Running Backtest Analysis...</span>
+              <span id="backtest-status-msg" class="progress-message">Scanning historical database...</span>
+            </div>
+          </div>
+          
+          <div class="table-container">
+            <table id="backtest-table">
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Company Name</th>
+                  <th>Crossover Date</th>
+                  <th>Close Price</th>
+                  <th>Daily RSI</th>
+                  <th>Prev Daily RSI</th>
+                  <th>Weekly RSI</th>
+                  <th>Monthly RSI</th>
+                </tr>
+              </thead>
+              <tbody id="backtest-table-body">
+                <tr>
+                  <td colspan="8" class="empty-table-msg">
+                    <i data-lucide="clock" class="empty-icon"></i>
+                    <p>No historical backtest data loaded. Click 'Run Backtest Audit' to scan the past 12 months for crossover occurrences.</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Log Panel -->
+        <div class="glass-card logs-card">
+          <div class="card-header">
+            <div class="header-title-row">
+              <i data-lucide="terminal" class="header-icon text-yellow"></i>
+              <h2>Real-Time System Logs</h2>
+            </div>
+            <button id="clear-logs-btn" class="btn btn-secondary-small">
+              <i data-lucide="trash-2" class="btn-icon"></i> Clear Logs
+            </button>
+          </div>
+          <div class="logs-console" id="logs-console-body">
+            <div class="log-line">[System] Fetching logs...</div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <footer class="app-footer">
+    <p>Powered by Google Antigravity AI Engine &bull; National Stock Exchange of India Cash Segment &bull; timezone Asia/Kolkata</p>
+  </footer>
+
+  <!-- App Logic Script -->
+  <script src="app.js"></script>
+</body>
+</html>
