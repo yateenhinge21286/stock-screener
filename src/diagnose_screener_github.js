@@ -41,6 +41,8 @@ async function diagnoseScreener() {
   try {
     const startDate = new Date();
     startDate.setFullYear(startDate.getFullYear() - 10);
+    startDate.setMonth(0, 1);
+    startDate.setHours(0, 0, 0, 0);
 
     const dailyData = await fetchWithRetry(yahooSymbol, {
       period1: startDate,

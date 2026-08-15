@@ -67,9 +67,11 @@ async function runBacktest(lookbackMonths = 12) {
 
   console.log(`Starting historical backtest for ${total} stocks over the last ${lookbackMonths} months with filters: minPrice=₹${minClosePrice}, minVolume=${minVolume.toLocaleString()}, minHistory=${minHistoryYears} years (${minRequiredBars} bars)...`);
 
-  // Start date for downloads: 10 years ago to stabilize Wilder's RSI smoothing
+  // Start date for downloads: 10 years ago, rounded to January 1st to standardize calculations and avoid weekend/timezone start date shifts
   const downloadStartDate = new Date();
   downloadStartDate.setFullYear(downloadStartDate.getFullYear() - 10);
+  downloadStartDate.setMonth(0, 1);
+  downloadStartDate.setHours(0, 0, 0, 0);
 
   // Backtest boundary: check crossovers that occurred in the last N months
   const backtestStartDate = new Date();
