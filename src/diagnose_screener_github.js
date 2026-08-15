@@ -39,10 +39,9 @@ async function diagnoseScreener() {
   msg += `Symbol: \`${yahooSymbol}\`\n\n`;
 
   try {
-    const startDate = new Date();
-    startDate.setFullYear(startDate.getFullYear() - 10);
-    startDate.setMonth(0, 1);
-    startDate.setHours(0, 0, 0, 0);
+    const now = new Date();
+    const startYear = now.getUTCFullYear() - 10;
+    const startDate = new Date(Date.UTC(startYear, 0, 1, 0, 0, 0, 0));
 
     const dailyData = await fetchWithRetry(yahooSymbol, {
       period1: startDate,

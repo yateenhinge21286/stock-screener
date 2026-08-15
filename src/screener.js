@@ -175,11 +175,10 @@ async function runScan(progressCallback = () => {}) {
 
   console.log(`Starting scan of ${total} stocks with filters: minPrice=₹${minClosePrice}, minVolume=${minVolume.toLocaleString()}, minHistory=${minHistoryYears} years (${minRequiredBars} bars)...`);
 
-  // Start date: 10 years ago, rounded to January 1st to standardize calculations and avoid weekend/timezone start date shifts
-  const startDate = new Date();
-  startDate.setFullYear(startDate.getFullYear() - 10);
-  startDate.setMonth(0, 1);
-  startDate.setHours(0, 0, 0, 0);
+  // Start date: 10 years ago, strictly constructed in UTC (January 1st) to align daily candles across all timezones
+  const now = new Date();
+  const startYear = now.getUTCFullYear() - 10;
+  const startDate = new Date(Date.UTC(startYear, 0, 1, 0, 0, 0, 0));
 
   const scanTask = async (stock) => {
     const symbol = stock.symbol;
