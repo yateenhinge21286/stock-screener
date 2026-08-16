@@ -161,8 +161,8 @@ async function runBacktest(lookbackMonths = 12) {
     }
   };
 
-  // Run with 15 parallel requests
-  await runWithConcurrency(15, stocks, backtestTask);
+  // Run with 5 parallel requests
+  await runWithConcurrency(5, stocks, backtestTask);
 
   // Sort matched events by date descending (latest first)
   backtestMatches.sort((a, b) => new Date(b.date) - new Date(a.date));

@@ -299,8 +299,8 @@ async function runScan(progressCallback = () => {}) {
     }
   };
 
-  // Run with concurrency limit of 15 to scan fast without triggering Yahoo Finance rate limits
-  await runWithConcurrency(15, stocks, scanTask);
+  // Run with concurrency limit of 5 to scan fast without triggering Yahoo Finance rate limits
+  await runWithConcurrency(5, stocks, scanTask);
 
   console.log(`Scan completed. Found ${matchedStocks.length} matched stocks out of ${total}.`);
   return matchedStocks;
