@@ -87,6 +87,9 @@ async function runDiagnosticScan() {
 
   try {
     const results = await runScan((progress) => {
+      if (progress.symbol === 'ADANIENSOL') {
+        console.log('🧪 ADANIENSOL Progress Details:', progress);
+      }
       if (progress.status === 'error') {
         skippedStocks[progress.symbol] = progress.message;
       }
