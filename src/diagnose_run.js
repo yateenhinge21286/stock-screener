@@ -67,6 +67,11 @@ async function getStockMathBreakdown(symbol) {
     res += `  - Daily RSI (Yesterday ➔ Today): ${prevDailyRsi !== null ? prevDailyRsi.toFixed(2) : 'N/A'} ➔ ${currentDailyRsi !== null ? currentDailyRsi.toFixed(2) : 'N/A'}\n`;
     res += `  - Weekly RSI: ${currentWeeklyRsi !== null ? currentWeeklyRsi.toFixed(2) : 'N/A'}\n`;
     res += `  - Monthly RSI: ${currentMonthlyRsi !== null ? currentMonthlyRsi.toFixed(2) : 'N/A'}\n`;
+    
+    res += `  - Latest 5 Candles:\n`;
+    cleanDaily.slice(-5).forEach(b => {
+      res += `    * ${b.date.toISOString().split('T')[0]}: Close: ₹${b.close.toFixed(2)}, Vol: ${b.volume.toLocaleString()}\n`;
+    });
     return res;
   } catch (err) {
     return `• **${symbol}**: Math check failed with error: _${err.message}_`;
