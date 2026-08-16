@@ -124,9 +124,9 @@ async function runBacktest(lookbackMonths = 12) {
           // Slice daily data up to day t to prevent look-ahead bias (future leakage)
           const simulatedDaily = cleanDaily.slice(0, t + 1);
           
-          // Calculate Weekly RSI up to day t
+          // Calculate Weekly RSI up to day t using the last 150 weeks
           const simWeeklyCloses = aggregateWeeklyCloses(simulatedDaily);
-          const simRsiWeekly = calculateRSI(simWeeklyCloses, 14);
+          const simRsiWeekly = calculateRSI(simWeeklyCloses.slice(-150), 14);
           const wRsi = simRsiWeekly[simRsiWeekly.length - 1];
 
           // Calculate Monthly RSI up to day t

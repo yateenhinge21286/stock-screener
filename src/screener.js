@@ -223,14 +223,14 @@ async function runScan(progressCallback = () => {}) {
         throw new Error(`Filtered: Trading volume ${latestVolume.toLocaleString()} is below minimum threshold ${minVolume.toLocaleString()}`);
       }
 
-      // Calculate Daily RSI
-      const rsiDaily = calculateRSI(dailyCloses, 14);
+      // Calculate Daily RSI using the last 250 bars to stabilize the calculation and avoid 10-year database discrepancies
+      const rsiDaily = calculateRSI(dailyCloses.slice(-250), 14);
       const currentDailyRsi = rsiDaily[rsiDaily.length - 1];
       const prevDailyRsi = rsiDaily[rsiDaily.length - 2];
-
-      // Aggregate Weekly and Calculate Weekly RSI
+ 
+      // Aggregate Weekly and Calculate Weekly RSI using the last 150 weeks
       const weeklyCloses = aggregateWeeklyCloses(cleanDaily);
-      const rsiWeekly = calculateRSI(weeklyCloses, 14);
+      const rsiWeekly = calculateRSI(weeklyCloses.slice(-150), 14);
       const currentWeeklyRsi = rsiWeekly[rsiWeekly.length - 1];
 
       // Aggregate Monthly and Calculate Monthly RSI
