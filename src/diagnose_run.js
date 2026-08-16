@@ -46,7 +46,7 @@ async function getStockMathBreakdown(symbol) {
       .sort((a, b) => new Date(a.date) - new Date(b.date));
 
     const dailyCloses = cleanDaily.map(b => b.close);
-    const rsiDaily = calculateRSI(dailyCloses.slice(-150), 14);
+    const rsiDaily = calculateRSI(dailyCloses.slice(-100), 14);
     const currentDailyRsi = rsiDaily[rsiDaily.length - 1];
     const prevDailyRsi = rsiDaily[rsiDaily.length - 2];
 
