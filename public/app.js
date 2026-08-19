@@ -29,6 +29,13 @@ const el = {
   testTelegramBtn: document.getElementById('test-telegram-btn'),
   updateNiftyBtn: document.getElementById('update-nifty-btn'),
   
+  upstoxApiKey: document.getElementById('upstox-api-key'),
+  upstoxApiSecret: document.getElementById('upstox-api-secret'),
+  upstoxStatusLabel: document.getElementById('upstox-status-label'),
+  upstoxSaveKeysBtn: document.getElementById('upstox-save-keys-btn'),
+  upstoxConnectBtn: document.getElementById('upstox-connect-btn'),
+  upstoxDisconnectBtn: document.getElementById('upstox-disconnect-btn'),
+  
   triggerScanBtn: document.getElementById('trigger-scan-btn'),
   progressContainer: document.getElementById('progress-container'),
   progressCurrentSymbol: document.getElementById('progress-current-symbol'),
@@ -97,6 +104,60 @@ function setupEventListeners() {
     const icon = el.toggleTokenVisibility.querySelector('i');
     icon.setAttribute('data-lucide', isPassword ? 'eye-off' : 'eye');
     lucide.createIcons();
+  });
+
+  // Save Upstox API keys
+  el.upstoxSaveKeysBtn.addEventListener('click', async () => {
+    const payload = {
+      telegramToken: el.telegramToken.value,
+      telegramChatId: el.telegramChatId.value,
+      schedulerEnabled: el.schedulerToggle.checked,
+      scanTime: el.schedulerTimeInput.value,
+      minClosePrice: parseFloat(el.minClosePrice.value),
+      minVolume: parseInt(el.minVolume.value, 10),
+      minHistoryYears: parseFloat(el.minHistoryYears.value),
+      upstoxApiKey: el.upstoxApiKey.value,
+      upstoxApiSecret: el.upstoxApiSecret.value
+    };
+
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        showConsoleNotification('Upstox API keys saved successfully.', 'success');
+        refreshStatus();
+      } else {
+        showConsoleNotification(`Save failed: ${data.error}`, 'error');
+      }
+    } catch (err) {
+      showConsoleNotification(`Failed to save Upstox keys: ${err.message}`, 'error');
+    }
+  });
+
+  // Connect to Upstox (OAuth Redirect)
+  el.upstoxConnectBtn.addEventListener('click', () => {
+    window.location.href = '/api/upstox/login';
+  });
+
+  // Disconnect from Upstox
+  el.upstoxDisconnectBtn.addEventListener('click', async () => {
+    if (!confirm('Are you sure you want to disconnect Upstox Integration?')) return;
+    try {
+      const res = await fetch('/api/upstox/disconnect', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        showConsoleNotification('Upstox disconnected successfully.', 'success');
+        refreshStatus();
+      } else {
+        showConsoleNotification(`Disconnect failed: ${data.error}`, 'error');
+      }
+    } catch (err) {
+      showConsoleNotification(`Failed to disconnect: ${err.message}`, 'error');
+    }
   });
 
   // Settings form submission
@@ -281,6 +342,24 @@ async function refreshStatus() {
     el.minClosePrice.value = data.config.minClosePrice !== undefined ? data.config.minClosePrice : 20;
     el.minVolume.value = data.config.minVolume !== undefined ? data.config.minVolume : 50000;
     el.minHistoryYears.value = data.config.minHistoryYears !== undefined ? data.config.minHistoryYears : 3;
+    
+    // Upstox settings binding
+    el.upstoxApiKey.value = data.config.upstoxApiKey || '';
+    el.upstoxApiSecret.value = data.config.upstoxApiSecret || '';
+    
+    const hasKeys = !!data.config.upstoxApiKey && !!data.config.upstoxApiSecret;
+    const hasToken = !!data.config.upstoxAccessToken;
+    
+    if (hasToken) {
+      el.upstoxStatusLabel.innerHTML = `<span style="color: var(--accent-green)">● Connected</span>`;
+      el.upstoxConnectBtn.style.display = 'none';
+      el.upstoxDisconnectBtn.style.display = 'inline-flex';
+    } else {
+      el.upstoxStatusLabel.innerHTML = `<span style="color: var(--text-dark)">● Disconnected</span>`;
+      el.upstoxConnectBtn.style.display = 'inline-flex';
+      el.upstoxDisconnectBtn.style.display = 'none';
+      el.upstoxConnectBtn.disabled = !hasKeys;
+    }
 
     // Overview cards metrics
     el.schedTimeDisplay.textContent = `${data.config.scanTime || '18:00'} IST`;

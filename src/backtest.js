@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const yahooFinance = require('yahoo-finance2').default;
 const { calculateRSI, aggregateWeeklyCloses, aggregateMonthlyCloses } = require('./screener');
+const { fetchUpstoxCandles } = require('./upstox');
 
 // Custom async pool function for concurrency control
 async function runWithConcurrency(limit, items, taskFn) {
@@ -83,16 +84,30 @@ async function runBacktest(lookbackMonths = 12) {
     const yahooSymbol = `${symbol}.NS`;
 
     try {
-      const dailyData = await fetchWithRetry(yahooSymbol, {
-        period1: downloadStartDate,
-        interval: '1d'
-      });
+      let cleanDaily = [];
 
-      if (!dailyData || dailyData.length === 0) return;
+      // If Upstox token is available, attempt fetching from Upstox first
+      if (config.upstoxAccessToken) {
+        try {
+          cleanDaily = await fetchUpstoxCandles(symbol, downloadStartDate, now, config.upstoxAccessToken);
+        } catch (upstoxErr) {
+          // Log warning and fallback to Yahoo Finance
+          console.warn(`[Upstox API] Failed to fetch ${symbol}: ${upstoxErr.message}. Falling back to Yahoo Finance...`);
+          cleanDaily = [];
+        }
+      }
 
-      const cleanDaily = dailyData
-        .filter(bar => bar.date && typeof bar.close === 'number' && !isNaN(bar.close))
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
+      // Fallback to Yahoo Finance if Upstox was not configured or failed
+      if (cleanDaily.length === 0) {
+        const dailyData = await fetchWithRetry(yahooSymbol, {
+          period1: downloadStartDate,
+          interval: '1d'
+        });
+        if (!dailyData || dailyData.length === 0) return;
+        cleanDaily = dailyData
+          .filter(bar => bar.date && typeof bar.close === 'number' && !isNaN(bar.close))
+          .sort((a, b) => new Date(a.date) - new Date(b.date));
+      }
 
       // 1. History Length Filter
       if (cleanDaily.length < minRequiredBars) return;

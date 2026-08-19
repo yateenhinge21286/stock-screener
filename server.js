@@ -12,6 +12,7 @@ const { executeScan, startScheduler, stopScheduler, getSchedulerStatus, logMessa
 const { sendMessage } = require('./src/telegram');
 const { fetchNSEEquities } = require('./src/fetch_stocks');
 const { runBacktest } = require('./src/backtest');
+const { downloadUpstoxInstruments } = require('./src/upstox');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -113,7 +114,7 @@ app.get('/api/scan-status', (req, res) => {
 
 // API: Save settings
 app.post('/api/settings', (req, res) => {
-  const { telegramToken, telegramChatId, schedulerEnabled, scanTime, minClosePrice, minVolume, minHistoryYears } = req.body;
+  const { telegramToken, telegramChatId, schedulerEnabled, scanTime, minClosePrice, minVolume, minHistoryYears, upstoxApiKey, upstoxApiSecret } = req.body;
   
   if (scanTime && !/^\d{2}:\d{2}$/.test(scanTime)) {
     return res.status(400).json({ error: 'Invalid time format. Use HH:MM.' });
@@ -127,6 +128,8 @@ app.post('/api/settings', (req, res) => {
   config.minClosePrice = minClosePrice !== undefined ? parseFloat(minClosePrice) : config.minClosePrice;
   config.minVolume = minVolume !== undefined ? parseInt(minVolume, 10) : config.minVolume;
   config.minHistoryYears = minHistoryYears !== undefined ? parseFloat(minHistoryYears) : config.minHistoryYears;
+  config.upstoxApiKey = upstoxApiKey !== undefined ? upstoxApiKey.trim() : config.upstoxApiKey;
+  config.upstoxApiSecret = upstoxApiSecret !== undefined ? upstoxApiSecret.trim() : config.upstoxApiSecret;
   
   if (saveConfig(config)) {
     logMessage(`Settings updated. Scheduler Enabled: ${config.schedulerEnabled}, Time: ${config.scanTime}, Filters: Price>=₹${config.minClosePrice}, Volume>=${config.minVolume.toLocaleString()}, History>=${config.minHistoryYears}y`);
@@ -141,6 +144,97 @@ app.post('/api/settings', (req, res) => {
     res.json({ success: true, config });
   } else {
     res.status(500).json({ error: 'Failed to save configuration.' });
+  }
+});
+
+// API: Upstox Login OAuth Redirect
+app.get('/api/upstox/login', (req, res) => {
+  const config = getConfig();
+  if (!config.upstoxApiKey) {
+    return res.status(400).send('<h1>Error</h1><p>Please enter your Upstox API Key first in settings.</p><a href="/">Back to Dashboard</a>');
+  }
+  const redirectUri = `${req.protocol}://${req.get('host')}/api/upstox/callback`;
+  const authUrl = `https://api.upstox.com/v2/login/authorization/dialog?response_type=code&client_id=${config.upstoxApiKey}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+  res.redirect(authUrl);
+});
+
+// API: Upstox OAuth Callback
+app.get('/api/upstox/callback', async (req, res) => {
+  const { code } = req.query;
+  if (!code) {
+    return res.status(400).send('<h1>Authentication Failed</h1><p>Auth code not returned by Upstox.</p><a href="/">Back to Dashboard</a>');
+  }
+
+  const config = getConfig();
+  const redirectUri = `${req.protocol}://${req.get('host')}/api/upstox/callback`;
+
+  try {
+    const tokenUrl = 'https://api.upstox.com/v2/login/authorization/token';
+    const params = new URLSearchParams();
+    params.append('code', code);
+    params.append('client_id', config.upstoxApiKey);
+    params.append('client_secret', config.upstoxApiSecret);
+    params.append('redirect_uri', redirectUri);
+    params.append('grant_type', 'authorization_code');
+
+    const response = await fetch(tokenUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json'
+      },
+      body: params.toString()
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Token exchange failed: ${errorText}`);
+    }
+
+    const tokenData = await response.json();
+    if (!tokenData.access_token) {
+      throw new Error('Access token not found in Upstox response.');
+    }
+
+    config.upstoxAccessToken = tokenData.access_token;
+    saveConfig(config);
+
+    logMessage('Upstox connection established! Access token saved successfully.');
+
+    // Asynchronously trigger mapping download
+    downloadUpstoxInstruments()
+      .then(() => logMessage('Upstox instruments list mapped and cached.'))
+      .catch(err => logMessage(`Failed to download Upstox instruments: ${err.message}`));
+
+    res.send(`
+      <html>
+        <head><title>Upstox Connected</title></head>
+        <body style="font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #0f172a; color: #f8fafc;">
+          <div style="background: #1e293b; padding: 2.5rem; border-radius: 12px; text-align: center; border: 1px solid #334155; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);">
+            <h1 style="color: #10b981; margin-top: 0;">🎉 Connected Successfully!</h1>
+            <p>Your Upstox developer account has been linked to the stock screener.</p>
+            <p style="color: #94a3b8; font-size: 0.9rem;">You can close this window and return to the dashboard.</p>
+            <a href="/" style="display: inline-block; margin-top: 1.5rem; background: #2563eb; color: white; padding: 0.75rem 1.5rem; border-radius: 6px; text-decoration: none; font-weight: bold;">Go to Dashboard</a>
+          </div>
+        </body>
+      </html>
+    `);
+
+  } catch (err) {
+    logMessage(`Upstox login error: ${err.message}`);
+    res.status(500).send(`<h1>Upstox Connection Failed</h1><p>${err.message}</p><a href="/">Back to Dashboard</a>`);
+  }
+});
+
+// API: Disconnect Upstox
+app.post('/api/upstox/disconnect', (req, res) => {
+  const config = getConfig();
+  config.upstoxAccessToken = '';
+  if (saveConfig(config)) {
+    logMessage('Upstox integration disconnected.');
+    res.json({ success: true });
+  } else {
+    res.status(500).json({ error: 'Failed to update configuration.' });
   }
 });
 

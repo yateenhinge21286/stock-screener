@@ -14,7 +14,10 @@ function getConfig() {
     minHistoryYears: 3,
     lastScanTime: null,
     lastScanStatus: 'never',
-    lastScanHits: 0
+    lastScanHits: 0,
+    upstoxApiKey: '',
+    upstoxApiSecret: '',
+    upstoxAccessToken: ''
   };
 
   try {
@@ -42,6 +45,15 @@ function getConfig() {
   }
   if (process.env.MIN_HISTORY_YEARS) {
     config.minHistoryYears = parseFloat(process.env.MIN_HISTORY_YEARS);
+  }
+  if (process.env.UPSTOX_API_KEY) {
+    config.upstoxApiKey = process.env.UPSTOX_API_KEY;
+  }
+  if (process.env.UPSTOX_API_SECRET) {
+    config.upstoxApiSecret = process.env.UPSTOX_API_SECRET;
+  }
+  if (process.env.UPSTOX_ACCESS_TOKEN) {
+    config.upstoxAccessToken = process.env.UPSTOX_ACCESS_TOKEN;
   }
 
   return config;

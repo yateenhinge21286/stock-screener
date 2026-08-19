@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const yahooFinance = require('yahoo-finance2').default;
+const { fetchUpstoxCandles } = require('./upstox');
 
 // Suppress some yahoo-finance2 schema validation warnings that can spam console
 yahooFinance.setGlobalConfig({
@@ -187,22 +188,35 @@ async function runScan(progressCallback = () => {}) {
     const yahooSymbol = `${symbol}.NS`;
 
     try {
-      // Fetch historical data
-      const queryOptions = {
-        period1: startDate,
-        interval: '1d'
-      };
+      let cleanDaily = [];
+      let dataSource = 'Yahoo Finance';
 
-      const dailyData = await fetchWithRetry(yahooSymbol, queryOptions);
-
-      // Filter out invalid bars first
-      if (!dailyData || dailyData.length === 0) {
-        throw new Error('No price history returned');
+      // If Upstox token is available, attempt fetching from Upstox first
+      if (config.upstoxAccessToken) {
+        try {
+          cleanDaily = await fetchUpstoxCandles(symbol, startDate, now, config.upstoxAccessToken);
+          dataSource = 'Upstox';
+        } catch (upstoxErr) {
+          // Log warning and fallback to Yahoo Finance
+          console.warn(`[Upstox API] Failed to fetch ${symbol}: ${upstoxErr.message}. Falling back to Yahoo Finance...`);
+          cleanDaily = [];
+        }
       }
 
-      const cleanDaily = dailyData
-        .filter(bar => bar.date && typeof bar.close === 'number' && !isNaN(bar.close))
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
+      // Fallback to Yahoo Finance if Upstox was not configured or failed
+      if (cleanDaily.length === 0) {
+        const queryOptions = {
+          period1: startDate,
+          interval: '1d'
+        };
+        const dailyData = await fetchWithRetry(yahooSymbol, queryOptions);
+        if (!dailyData || dailyData.length === 0) {
+          throw new Error('No price history returned');
+        }
+        cleanDaily = dailyData
+          .filter(bar => bar.date && typeof bar.close === 'number' && !isNaN(bar.close))
+          .sort((a, b) => new Date(a.date) - new Date(b.date));
+      }
 
       // 1. History Length Filter
       if (cleanDaily.length < minRequiredBars) {
