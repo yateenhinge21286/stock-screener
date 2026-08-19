@@ -138,10 +138,47 @@ function setupEventListeners() {
     }
   });
 
-  // Connect to Upstox (OAuth Redirect)
-  el.upstoxConnectBtn.addEventListener('click', () => {
-    window.location.href = '/api/upstox/login';
+  // Connect to Upstox (OAuth Redirect with Auto-Save)
+  el.upstoxConnectBtn.addEventListener('click', async () => {
+    const payload = {
+      telegramToken: el.telegramToken.value,
+      telegramChatId: el.telegramChatId.value,
+      schedulerEnabled: el.schedulerToggle.checked,
+      scanTime: el.schedulerTimeInput.value,
+      minClosePrice: parseFloat(el.minClosePrice.value),
+      minVolume: parseInt(el.minVolume.value, 10),
+      minHistoryYears: parseFloat(el.minHistoryYears.value),
+      upstoxApiKey: el.upstoxApiKey.value.trim(),
+      upstoxApiSecret: el.upstoxApiSecret.value.trim()
+    };
+
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        window.location.href = '/api/upstox/login';
+      } else {
+        showConsoleNotification(`Failed to save credentials: ${data.error}`, 'error');
+      }
+    } catch (err) {
+      showConsoleNotification(`Error connecting Upstox: ${err.message}`, 'error');
+    }
   });
+
+  // Enable/disable Connect button dynamically as user types
+  const validateUpstoxInputs = () => {
+    const hasKeys = el.upstoxApiKey.value.trim() && el.upstoxApiSecret.value.trim();
+    const hasToken = el.upstoxDisconnectBtn.style.display === 'inline-flex'; // Already connected
+    if (!hasToken) {
+      el.upstoxConnectBtn.disabled = !hasKeys;
+    }
+  };
+  el.upstoxApiKey.addEventListener('input', validateUpstoxInputs);
+  el.upstoxApiSecret.addEventListener('input', validateUpstoxInputs);
 
   // Disconnect from Upstox
   el.upstoxDisconnectBtn.addEventListener('click', async () => {
