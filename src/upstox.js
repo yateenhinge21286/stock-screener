@@ -1,46 +1,80 @@
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
+const zlib = require('zlib');
 
 const instrumentsPath = path.join(__dirname, 'upstox_instruments.json');
 
-// Download and parse Upstox's NSE Instrument list
+// Helper to make native HTTPS requests returning a Buffer (for gzipped content)
+function httpsRequestBuffer(url, options = {}) {
+  return new Promise((resolve, reject) => {
+    const urlObj = new URL(url);
+    const requestOptions = {
+      hostname: urlObj.hostname,
+      path: urlObj.pathname + urlObj.search,
+      method: options.method || 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        ...options.headers
+      }
+    };
+
+    const req = https.request(requestOptions, (res) => {
+      // Handle redirects if any
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        return httpsRequestBuffer(res.headers.location, options).then(resolve).catch(reject);
+      }
+
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        let errData = '';
+        res.on('data', chunk => errData += chunk);
+        res.on('end', () => reject(new Error(`HTTP ${res.statusCode}: ${errData}`)));
+        return;
+      }
+
+      const chunks = [];
+      res.on('data', chunk => chunks.push(chunk));
+      res.on('end', () => {
+        resolve(Buffer.concat(chunks));
+      });
+    });
+
+    req.on('error', reject);
+
+    if (options.body) {
+      req.write(options.body);
+    }
+    req.end();
+  });
+}
+
+// Helper to make native HTTPS requests returning string text
+async function httpsRequest(url, options = {}) {
+  const buffer = await httpsRequestBuffer(url, options);
+  return buffer.toString('utf8');
+}
+
+// Download, unzip, and parse Upstox's NSE JSON Instrument list
 async function downloadUpstoxInstruments() {
-  console.log('Downloading Upstox NSE instruments mapping (NSE.csv)...');
+  console.log('Downloading Upstox NSE instruments mapping (NSE.json.gz)...');
   try {
-    const response = await fetch('https://headers.upstox.com/instruments/NSE.csv');
-    if (!response.ok) {
-      throw new Error(`Failed to fetch Upstox instruments: ${response.statusText}`);
-    }
-    const text = await response.text();
-    const lines = text.split('\n');
-    if (lines.length === 0) {
-      throw new Error('Instruments CSV is empty');
-    }
-
-    const headers = lines[0].split(',');
-    const keyIdx = headers.indexOf('instrument_key');
-    const symbolIdx = headers.indexOf('trading_symbol');
-    const segmentIdx = headers.indexOf('segment');
-
-    if (keyIdx === -1 || symbolIdx === -1 || segmentIdx === -1) {
-      throw new Error('Failed to parse columns from Upstox NSE.csv');
+    const url = 'https://assets.upstox.com/market-quote/instruments/exchange/NSE.json.gz';
+    const buffer = await httpsRequestBuffer(url);
+    
+    // Decompress the gzipped JSON content
+    const jsonText = zlib.gunzipSync(buffer).toString('utf8');
+    const instruments = JSON.parse(jsonText);
+    
+    if (!Array.isArray(instruments)) {
+      throw new Error('Instruments JSON is not an array');
     }
 
     const mapping = {};
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line) continue;
-      
-      const cols = line.split(',');
-      if (cols.length <= Math.max(keyIdx, symbolIdx, segmentIdx)) continue;
-
-      const key = cols[keyIdx];
-      const symbol = cols[symbolIdx];
-      const segment = cols[segmentIdx];
-
-      // We only scan cash equity segment stocks
-      if (segment === 'NSE_EQ') {
-        mapping[symbol] = key;
+    for (const inst of instruments) {
+      // Filter for cash equity segment (NSE Cash is segment 'NSE_EQ')
+      if (inst.segment === 'NSE_EQ' && inst.instrument_type === 'EQ') {
+        // e.g. mapping["RELIANCE"] = "NSE_EQ|INE002A01018"
+        mapping[inst.trading_symbol] = inst.instrument_key;
       }
     }
 
@@ -55,7 +89,6 @@ async function downloadUpstoxInstruments() {
 
 // Retrieve instrument key for a symbol
 function getInstrumentKey(symbol) {
-  // If file doesn't exist, return null (it will be downloaded on callback authentication)
   if (!fs.existsSync(instrumentsPath)) {
     return null;
   }
@@ -84,7 +117,7 @@ async function fetchUpstoxCandles(symbol, startDate, toDate = new Date(), access
   // Upstox endpoint: /historical-candle/{instrumentKey}/day/{toDate}/{fromDate}
   const url = `https://api.upstox.com/v2/historical-candle/${encodeURIComponent(key)}/day/${toDateStr}/${fromDateStr}`;
 
-  const response = await fetch(url, {
+  const responseText = await httpsRequest(url, {
     method: 'GET',
     headers: {
       'Accept': 'application/json',
@@ -92,18 +125,13 @@ async function fetchUpstoxCandles(symbol, startDate, toDate = new Date(), access
     }
   });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Upstox candle fetch failed (${response.status}): ${errorText}`);
-  }
-
-  const json = await response.json();
+  const json = JSON.parse(responseText);
   if (json.status !== 'success' || !json.data || !Array.isArray(json.data.candles)) {
-    throw new Error(`Upstox returned invalid format: ${JSON.stringify(json)}`);
+    throw new Error(`Upstox returned invalid format: ${responseText}`);
   }
 
   // Upstox candle array: [timestamp, open, high, low, close, volume, open_interest]
-  // Note: Upstox candles are returned descending (latest date first)
+  // Upstox candles are returned descending (latest date first)
   const candles = json.data.candles.map(c => ({
     date: new Date(c[0]),
     open: parseFloat(c[1]),
