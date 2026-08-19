@@ -71,7 +71,7 @@ async function runBacktest(lookbackMonths = 12) {
 
   // Start date for downloads: 10 years ago, strictly constructed in UTC (January 1st) to align daily candles across all timezones
   const now = new Date();
-  const startYear = now.getUTCFullYear() - 10;
+  const startYear = now.getUTCFullYear() - 6;
   const downloadStartDate = new Date(Date.UTC(startYear, 0, 1, 0, 0, 0, 0));
 
   // Backtest boundary: check crossovers that occurred in the last N months

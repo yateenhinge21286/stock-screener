@@ -179,7 +179,7 @@ async function runScan(progressCallback = () => {}) {
 
   // Start date: 10 years ago, strictly constructed in UTC (January 1st) to align daily candles across all timezones
   const now = new Date();
-  const startYear = now.getUTCFullYear() - 10;
+  const startYear = now.getUTCFullYear() - 6;
   const startDate = new Date(Date.UTC(startYear, 0, 1, 0, 0, 0, 0));
 
   const scanTask = async (stock) => {
