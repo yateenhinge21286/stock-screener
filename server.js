@@ -55,7 +55,10 @@ app.get('/api/status', (req, res) => {
       scanTime: config.scanTime || '18:00',
       minClosePrice: config.minClosePrice !== undefined ? config.minClosePrice : 20,
       minVolume: config.minVolume !== undefined ? config.minVolume : 50000,
-      minHistoryYears: config.minHistoryYears !== undefined ? config.minHistoryYears : 3
+      minHistoryYears: config.minHistoryYears !== undefined ? config.minHistoryYears : 3,
+      upstoxApiKey: config.upstoxApiKey || '',
+      upstoxApiSecret: config.upstoxApiSecret || '',
+      upstoxAccessToken: config.upstoxAccessToken || ''
     },
     scheduler: schedStatus,
     scanState: scanState,
