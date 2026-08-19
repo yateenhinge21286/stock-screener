@@ -58,7 +58,8 @@ app.get('/api/status', (req, res) => {
       minHistoryYears: config.minHistoryYears !== undefined ? config.minHistoryYears : 3,
       upstoxApiKey: config.upstoxApiKey || '',
       upstoxApiSecret: config.upstoxApiSecret || '',
-      upstoxAccessToken: config.upstoxAccessToken || ''
+      upstoxAccessToken: config.upstoxAccessToken || '',
+      upstoxOnly: !!config.upstoxOnly
     },
     scheduler: schedStatus,
     scanState: scanState,
@@ -117,7 +118,7 @@ app.get('/api/scan-status', (req, res) => {
 
 // API: Save settings
 app.post('/api/settings', (req, res) => {
-  const { telegramToken, telegramChatId, schedulerEnabled, scanTime, minClosePrice, minVolume, minHistoryYears, upstoxApiKey, upstoxApiSecret } = req.body;
+  const { telegramToken, telegramChatId, schedulerEnabled, scanTime, minClosePrice, minVolume, minHistoryYears, upstoxApiKey, upstoxApiSecret, upstoxOnly } = req.body;
   
   if (scanTime && !/^\d{2}:\d{2}$/.test(scanTime)) {
     return res.status(400).json({ error: 'Invalid time format. Use HH:MM.' });
@@ -133,6 +134,7 @@ app.post('/api/settings', (req, res) => {
   config.minHistoryYears = minHistoryYears !== undefined ? parseFloat(minHistoryYears) : config.minHistoryYears;
   config.upstoxApiKey = upstoxApiKey !== undefined ? upstoxApiKey.trim() : config.upstoxApiKey;
   config.upstoxApiSecret = upstoxApiSecret !== undefined ? upstoxApiSecret.trim() : config.upstoxApiSecret;
+  config.upstoxOnly = upstoxOnly !== undefined ? !!upstoxOnly : config.upstoxOnly;
   
   if (saveConfig(config)) {
     logMessage(`Settings updated. Scheduler Enabled: ${config.schedulerEnabled}, Time: ${config.scanTime}, Filters: Price>=₹${config.minClosePrice}, Volume>=${config.minVolume.toLocaleString()}, History>=${config.minHistoryYears}y`);

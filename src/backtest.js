@@ -91,10 +91,15 @@ async function runBacktest(lookbackMonths = 12) {
         try {
           cleanDaily = await fetchUpstoxCandles(symbol, downloadStartDate, now, config.upstoxAccessToken);
         } catch (upstoxErr) {
+          if (config.upstoxOnly) {
+            throw new Error(`Upstox fetch failed: ${upstoxErr.message}`);
+          }
           // Log warning and fallback to Yahoo Finance
           console.warn(`[Upstox API] Failed to fetch ${symbol}: ${upstoxErr.message}. Falling back to Yahoo Finance...`);
           cleanDaily = [];
         }
+      } else if (config.upstoxOnly) {
+        throw new Error('Upstox integration required (Force Upstox Only is enabled)');
       }
 
       // Fallback to Yahoo Finance if Upstox was not configured or failed

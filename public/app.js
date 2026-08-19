@@ -35,6 +35,7 @@ const el = {
   upstoxSaveKeysBtn: document.getElementById('upstox-save-keys-btn'),
   upstoxConnectBtn: document.getElementById('upstox-connect-btn'),
   upstoxDisconnectBtn: document.getElementById('upstox-disconnect-btn'),
+  upstoxOnlyToggle: document.getElementById('upstox-only-toggle'),
   
   triggerScanBtn: document.getElementById('trigger-scan-btn'),
   progressContainer: document.getElementById('progress-container'),
@@ -117,7 +118,8 @@ function setupEventListeners() {
       minVolume: parseInt(el.minVolume.value, 10),
       minHistoryYears: parseFloat(el.minHistoryYears.value),
       upstoxApiKey: el.upstoxApiKey.value,
-      upstoxApiSecret: el.upstoxApiSecret.value
+      upstoxApiSecret: el.upstoxApiSecret.value,
+      upstoxOnly: el.upstoxOnlyToggle.checked
     };
 
     try {
@@ -149,7 +151,8 @@ function setupEventListeners() {
       minVolume: parseInt(el.minVolume.value, 10),
       minHistoryYears: parseFloat(el.minHistoryYears.value),
       upstoxApiKey: el.upstoxApiKey.value.trim(),
-      upstoxApiSecret: el.upstoxApiSecret.value.trim()
+      upstoxApiSecret: el.upstoxApiSecret.value.trim(),
+      upstoxOnly: el.upstoxOnlyToggle.checked
     };
 
     try {
@@ -180,6 +183,37 @@ function setupEventListeners() {
   el.upstoxApiKey.addEventListener('input', validateUpstoxInputs);
   el.upstoxApiSecret.addEventListener('input', validateUpstoxInputs);
 
+  // Auto-save when Upstox Only toggle is clicked
+  el.upstoxOnlyToggle.addEventListener('change', async () => {
+    const payload = {
+      telegramToken: el.telegramToken.value,
+      telegramChatId: el.telegramChatId.value,
+      schedulerEnabled: el.schedulerToggle.checked,
+      scanTime: el.schedulerTimeInput.value,
+      minClosePrice: parseFloat(el.minClosePrice.value),
+      minVolume: parseInt(el.minVolume.value, 10),
+      minHistoryYears: parseFloat(el.minHistoryYears.value),
+      upstoxApiKey: el.upstoxApiKey.value,
+      upstoxApiSecret: el.upstoxApiSecret.value,
+      upstoxOnly: el.upstoxOnlyToggle.checked
+    };
+
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        showConsoleNotification(`Force Upstox Only set to: ${el.upstoxOnlyToggle.checked}`, 'success');
+        refreshStatus();
+      }
+    } catch (err) {
+      console.error('Failed to auto-save Upstox Only setting:', err);
+    }
+  });
+
   // Disconnect from Upstox
   el.upstoxDisconnectBtn.addEventListener('click', async () => {
     if (!confirm('Are you sure you want to disconnect Upstox Integration?')) return;
@@ -207,7 +241,10 @@ function setupEventListeners() {
       scanTime: el.schedulerTimeInput.value,
       minClosePrice: parseFloat(el.minClosePrice.value),
       minVolume: parseInt(el.minVolume.value, 10),
-      minHistoryYears: parseFloat(el.minHistoryYears.value)
+      minHistoryYears: parseFloat(el.minHistoryYears.value),
+      upstoxApiKey: el.upstoxApiKey.value,
+      upstoxApiSecret: el.upstoxApiSecret.value,
+      upstoxOnly: el.upstoxOnlyToggle.checked
     };
 
     try {
@@ -383,6 +420,7 @@ async function refreshStatus() {
     // Upstox settings binding
     el.upstoxApiKey.value = data.config.upstoxApiKey || '';
     el.upstoxApiSecret.value = data.config.upstoxApiSecret || '';
+    el.upstoxOnlyToggle.checked = !!data.config.upstoxOnly;
     
     const hasKeys = !!data.config.upstoxApiKey && !!data.config.upstoxApiSecret;
     const hasToken = !!data.config.upstoxAccessToken;

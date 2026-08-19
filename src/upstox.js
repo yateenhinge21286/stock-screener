@@ -5,6 +5,22 @@ const zlib = require('zlib');
 
 const instrumentsPath = path.join(__dirname, 'upstox_instruments.json');
 
+// Global rate throttle queue variables (keeps calls separated by 550ms, max 109 req/min)
+let lastRequestTime = 0;
+
+async function throttleUpstox() {
+  const now = Date.now();
+  const timeSinceLast = now - lastRequestTime;
+  const minInterval = 550; // 550ms minimum interval
+  if (timeSinceLast < minInterval) {
+    const delay = minInterval - timeSinceLast;
+    lastRequestTime = now + delay;
+    await new Promise(resolve => setTimeout(resolve, delay));
+  } else {
+    lastRequestTime = now;
+  }
+}
+
 // Helper to make native HTTPS requests returning a Buffer (for gzipped content)
 function httpsRequestBuffer(url, options = {}) {
   return new Promise((resolve, reject) => {
@@ -108,6 +124,9 @@ async function fetchUpstoxCandles(symbol, startDate, toDate = new Date(), access
   if (!key) {
     throw new Error(`Upstox instrument key not found for symbol: ${symbol}`);
   }
+
+  // Throttle request rate to respect 120 req/min Upstox limit
+  await throttleUpstox();
 
   // Format dates as YYYY-MM-DD
   const formatISO = (date) => date.toISOString().split('T')[0];

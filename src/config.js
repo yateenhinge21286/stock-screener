@@ -17,7 +17,8 @@ function getConfig() {
     lastScanHits: 0,
     upstoxApiKey: '',
     upstoxApiSecret: '',
-    upstoxAccessToken: ''
+    upstoxAccessToken: '',
+    upstoxOnly: false
   };
 
   try {
@@ -54,6 +55,9 @@ function getConfig() {
   }
   if (process.env.UPSTOX_ACCESS_TOKEN) {
     config.upstoxAccessToken = process.env.UPSTOX_ACCESS_TOKEN;
+  }
+  if (process.env.UPSTOX_ONLY) {
+    config.upstoxOnly = process.env.UPSTOX_ONLY === 'true';
   }
 
   return config;

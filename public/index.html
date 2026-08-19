@@ -340,11 +340,16 @@
               <input type="password" id="upstox-api-secret" placeholder="Enter API Secret" class="form-input">
             </div>
 
-            <div class="form-group-row" style="margin-top: 15px; margin-bottom: 15px; align-items: center;">
+            <div class="form-group-row" style="margin-top: 15px; margin-bottom: 10px; align-items: center;">
               <div class="toggle-group" style="display: flex; gap: 8px; align-items: center;">
                 <span class="toggle-label" style="font-weight: 500; font-size: 0.95rem;">Connection Status:</span>
                 <span id="upstox-status-label" style="font-weight: bold; font-size: 0.95rem;">● Loading...</span>
               </div>
+            </div>
+
+            <div class="form-group-row" style="margin-top: 10px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="upstox-only-toggle" style="width: 18px; height: 18px; cursor: pointer;">
+              <label for="upstox-only-toggle" style="margin: 0; font-weight: 500; font-size: 0.95rem; cursor: pointer;">Force Upstox Only (Disable Yahoo Fallback)</label>
             </div>
 
             <div class="button-row">
