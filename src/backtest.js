@@ -130,8 +130,8 @@ async function runBacktest(lookbackMonths = 12) {
         const prevD = rsiDaily[t - 1];
         const currD = rsiDaily[t];
 
-        // Crossover check: Daily RSI crossed above 40 (yesterday < 40, today > 40)
-        if (prevD !== null && currD !== null && prevD < 40 && currD > 40) {
+        // Crossover check: Daily RSI crossed above any value in [39, 41] (yesterday < 41, today > 39)
+        if (prevD !== null && currD !== null && prevD < 41 && currD > 39 && currD > prevD) {
           
           const closePrice = cleanDaily[t].close;
           const volume = typeof cleanDaily[t].volume === 'number' && !isNaN(cleanDaily[t].volume) ? cleanDaily[t].volume : 0;
@@ -155,9 +155,9 @@ async function runBacktest(lookbackMonths = 12) {
           const simRsiMonthly = calculateRSI(simMonthlyCloses, 14);
           const mRsi = simRsiMonthly[simRsiMonthly.length - 1];
 
-          // Filter rules: Weekly RSI > 60 and Monthly RSI > 60 on that date (no look-ahead)
-          if (wRsi !== undefined && wRsi !== null && wRsi > 60 &&
-              mRsi !== undefined && mRsi !== null && mRsi > 60) {
+          // Filter rules: Weekly RSI > 61 and Monthly RSI > 61 on that date (no look-ahead)
+          if (wRsi !== undefined && wRsi !== null && wRsi > 61 &&
+              mRsi !== undefined && mRsi !== null && mRsi > 61) {
             
             backtestMatches.push({
               symbol,

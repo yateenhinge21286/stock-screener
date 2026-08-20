@@ -259,19 +259,18 @@ async function runScan(progressCallback = () => {}) {
       const currentMonthlyRsi = rsiMonthly[rsiMonthly.length - 1];
 
       // Evaluate Screening Rules
-      // 1. Monthly RSI(14) > 60
-      const isMonthlyRsiOk = currentMonthlyRsi !== null && currentMonthlyRsi > 60;
+      // 1. Monthly RSI(14) > 61
+      const isMonthlyRsiOk = currentMonthlyRsi !== null && currentMonthlyRsi > 61;
 
-      // 2. Weekly RSI(14) > 60
-      const isWeeklyRsiOk = currentWeeklyRsi !== null && currentWeeklyRsi > 60;
+      // 2. Weekly RSI(14) > 61
+      const isWeeklyRsiOk = currentWeeklyRsi !== null && currentWeeklyRsi > 61;
 
-      // 3. 1 day ago Daily RSI(14) < 40
-      const isPrevDailyRsiOk = prevDailyRsi !== null && prevDailyRsi < 40;
+      // 3. Daily RSI Crossover: yesterday < 41, today > 39, and today > yesterday (crossed above any value in [39, 41])
+      const isCrossover = prevDailyRsi !== null && currentDailyRsi !== null &&
+                          prevDailyRsi < 41 && currentDailyRsi > 39 &&
+                          currentDailyRsi > prevDailyRsi;
 
-      // 4. Today Daily RSI(14) > 40
-      const isTodayDailyRsiOk = currentDailyRsi !== null && currentDailyRsi > 40;
-
-      const isMatch = isMonthlyRsiOk && isWeeklyRsiOk && isPrevDailyRsiOk && isTodayDailyRsiOk;
+      const isMatch = isMonthlyRsiOk && isWeeklyRsiOk && isCrossover;
 
       const stockResult = {
         symbol,
